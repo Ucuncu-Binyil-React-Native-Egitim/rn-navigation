@@ -8,8 +8,8 @@ export default function App() {
   return (
     <NavigationContainer>
       <StatusBar barStyle={'default'} />
-      <Tabs />
-      {/* <AuthStack /> */}
+      {/* <Tabs /> */}
+      <AuthStack />
     </NavigationContainer>
   );
 }

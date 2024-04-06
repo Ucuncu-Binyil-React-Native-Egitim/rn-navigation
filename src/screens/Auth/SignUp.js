@@ -5,22 +5,26 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
+  Alert,
 } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Entypo } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
-import { valid } from '../../Utils';
+import { Formik } from 'formik';
+import * as Yup from "yup"
+
 
 export const SignUp = () => {
-  const { top } = useSafeAreaInsets();
-  const [email, setEmail] = useState();
-  const [password, setPassword] = useState();
-  const [passwordAgain, setPasswordAgain] = useState();
-  const [username, setUserName] = useState();
-
   const navigation = useNavigation();
+  
+  const SignUpSchema = Yup.object().shape({
+    username: Yup.string().min(5, "Kullanıcı adı en az 5 karakter olmalıdır.").max(32, "Kullanıcı adı çok uzun").required("Lütfen doldurunuz."),
+    email: Yup.string().matches(/^[a-zA-Z0–9._-]+@[a-zA-Z0–9.-]+\.[a-zA-Z]{2,4}$/, "Lütfen geçerli bir email giriniz.").required("Lütfen doldurunuz."),
+    password: Yup.string().min(8, "Parola en az 8 karakterli olmalı").max(50, "Parola çok uzun").required("Lütfen doldurunuz."),
+    rePassword: Yup.string().oneOf([Yup.ref('password')], "Parolalar aynı değil").required("Lütfen doldurunuz.")
+  })
+
   return (
-    <View style={[styles.container, { paddingTop: top * 1.4 }]}>
+    <View style={[styles.container, { paddingTop: 60 }]}>
       {/* Header */}
       <View>
         <Text style={styles.title}>
@@ -31,44 +35,61 @@ export const SignUp = () => {
         </Text>
       </View>
       {/* Form */}
-      <View style={styles.formContainer}>
-        <TextInput
-          placeholder='Username'
-          value={username}
-          onChangeText={(e) => setUserName(e)}
-          style={styles.inputBox}
-        />
-        <View style={styles.seperator} />
-        <TextInput
-          placeholder='Email'
-          value={email}
-          onChangeText={(e) => setEmail(e)}
-          style={styles.inputBox}
-        />
-        <View style={styles.seperator} />
-        <TextInput
-          placeholder='Password'
-          value={password}
-          onChangeText={(e) => setPassword(e)}
-          style={styles.inputBox}
-          secureTextEntry={true}
-        />
-        <View style={styles.seperator} />
-        <TextInput
-          placeholder='Password again'
-          value={passwordAgain}
-          onChangeText={(e) => setPasswordAgain(e)}
-          style={styles.inputBox}
-          secureTextEntry={true}
-        />
-        <TouchableOpacity activeOpacity={0.6} style={styles.button}>
-          <Text style={styles.buttonText}>Kayıt Ol</Text>
-          <Entypo name='login' size={24} color='#333' />
-        </TouchableOpacity>
-      </View>
+      <Formik
+        initialValues={{
+          username: "",
+          email: "",
+          password: "",
+          rePassword: ""
+        }}
+        validationSchema={SignUpSchema}
+        onSubmit={(values) => Alert.alert(JSON.stringify(values))} // istek at, formu database'e kaydet, ...
+      >
+        {({ errors, touched, handleChange, handleBlur, handleSubmit, values, isValid }) => (
+          <View style={styles.formContainer}>
+            <TextInput
+              placeholder='Username'
+              value={values.username}
+              onChangeText={handleChange('username')}
+              style={styles.inputBox}
+            />
+            {errors.username && touched.username && <Text style={styles.errorText}>{errors.username}</Text>}
+            <View style={styles.seperator} />
+            <TextInput
+              placeholder='Email'
+              style={styles.inputBox}
+              value={values.email}
+              onChangeText={handleChange('email')}
+            />
+            {errors.email && touched.email && <Text style={styles.errorText}>{errors.email}</Text>}
+            <View style={styles.seperator} />
+            <TextInput
+              placeholder='Password'
+              style={styles.inputBox}
+              value={values.password}
+              onChangeText={handleChange('password')}
+              secureTextEntry={true}
+            />
+            {errors.password && touched.password && <Text style={styles.errorText}>{errors.password}</Text>}
+            <View style={styles.seperator} />
+            <TextInput
+              placeholder='Password again'
+              value={values.rePassword}
+              onChangeText={handleChange('rePassword')}
+              style={styles.inputBox}
+              secureTextEntry={true}
+            />
+            {errors.rePassword && touched.rePassword && <Text style={styles.errorText}>{errors.rePassword}</Text>}
+            <TouchableOpacity activeOpacity={0.6} style={styles.button} onPress={handleSubmit}>
+              <Text style={styles.buttonText}>Kayıt Ol</Text>
+              <Entypo name='login' size={24} color='#333' />
+            </TouchableOpacity>
+          </View>
+        )}
+      </Formik>
 
       {/* Footer */}
-      <View style={[styles.footerContainer, { paddingBottom: top }]}>
+      <View style={[styles.footerContainer, { paddingBottom: 45 }]}>
         <Text style={[styles.text, { color: 'white' }]}>
           Henüz hesabınız yok mu
         </Text>
@@ -147,4 +168,11 @@ const styles = StyleSheet.create({
     color: '#ACE2E1',
     textDecorationLine: 'underline',
   },
+  errorText: {
+    color: "red",
+    padding: 4,
+    paddingLeft: 20
+  }
 });
+
+

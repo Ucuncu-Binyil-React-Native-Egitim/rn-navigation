@@ -6,18 +6,22 @@ import {
   TextInput,
   TouchableOpacity,
 } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Entypo } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
+import { Formik } from 'formik';
+import * as Yup from "yup"
 
 export const SignIn = () => {
-  const { top } = useSafeAreaInsets();
-  const [email, setEmail] = useState();
-  const [password, setPassword] = useState();
   const [secretPassword, setSecretPassword] = useState(true);
   const navigation = useNavigation();
+
+  const SignInSchema = Yup.object().shape({
+    email: Yup.string().matches(/^[a-zA-Z0–9._-]+@[a-zA-Z0–9.-]+\.[a-zA-Z]{2,4}$/, "Lütfen geçerli bir email giriniz."),
+    password: Yup.string().required("Lütfen şifre giriniz")
+  });
+
   return (
-    <View style={[styles.container, { paddingTop: top * 1.4 }]}>
+    <View style={[styles.container, { paddingTop: 60 }]}>
       {/* Header */}
       <View>
         <Text style={styles.title}>
@@ -28,48 +32,62 @@ export const SignIn = () => {
         </Text>
       </View>
       {/* Form */}
-      <View style={styles.formContainer}>
-        <TextInput
-          placeholder='Email'
-          value={email}
-          onChangeText={(e) => setEmail(e)}
-          style={styles.inputBox}
-        />
-        <View style={styles.seperator} />
-        <View
-          style={{
-            flexDirection: 'row',
-            width: '100%',
+        <Formik
+          initialValues={{
+            email: '',
+            password: ''
           }}
+          validationSchema={SignInSchema}
+          onSubmit={(values) => console.log(values)}
         >
-          <View style={styles.passwordInput}>
-            <TextInput
-              placeholder='Password'
-              value={password}
-              onChangeText={(e) => setPassword(e)}
-              style={styles.inputBox}
-              secureTextEntry={secretPassword}
-            />
-          </View>
-          <TouchableOpacity
-            style={styles.eyeIcon}
-            onPress={() => setSecretPassword(!secretPassword)}
-          >
-            <Entypo
-              name={secretPassword ? 'eye-with-line' : 'eye'}
-              size={24}
-              color='black'
-            />
-          </TouchableOpacity>
-        </View>
-        <TouchableOpacity activeOpacity={0.6} style={styles.button}>
-          <Text style={styles.buttonText}>Giriş Yap</Text>
-          <Entypo name='login' size={24} color='#333' />
-        </TouchableOpacity>
-      </View>
-
+          {({ errors, touched, handleChange, handleBlur, handleSubmit, values, isValid }) => (
+            <View style={styles.formContainer}>
+              <TextInput
+                placeholder='Email'
+                value={values.email}
+                onChangeText={handleChange('email')}
+                onBlur={handleBlur('email')}
+                style={styles.inputBox}
+              />
+              {touched.email && errors.email && <Text style={styles.errorText}>{errors.email}</Text>}
+              <View style={styles.seperator} />
+              <View
+                style={{
+                  flexDirection: 'row',
+                  width: '100%',
+                }}
+              >
+                <View style={styles.passwordInput}>
+                  <TextInput
+                    placeholder='Password'
+                    value={values.password}
+                    onChangeText={handleChange('password')}
+                    onBlur={handleBlur('password')}
+                    style={styles.inputBox}
+                    secureTextEntry={secretPassword}
+                  />
+                  {touched.password && errors.password && <Text style={styles.errorText}>{errors.password}</Text>}
+                </View>
+                <TouchableOpacity
+                  style={styles.eyeIcon}
+                  onPress={() => setSecretPassword(!secretPassword)}
+                >
+                  <Entypo
+                    name={secretPassword ? 'eye-with-line' : 'eye'}
+                    size={24}
+                    color='black'
+                  />
+                </TouchableOpacity>
+              </View>
+              <TouchableOpacity disabled={!isValid} activeOpacity={0.6} style={[styles.button, {backgroundColor: isValid ?'#ECA800' : '#ccc',}]} onPress={handleSubmit}>
+                <Text style={styles.buttonText}>Giriş Yap</Text>
+                <Entypo name='login' size={24} color='#333' />
+              </TouchableOpacity>
+            </View>
+          )}
+        </Formik> 
       {/* Footer */}
-      <View style={[styles.footerContainer, { paddingBottom: top }]}>
+      <View style={[styles.footerContainer, { paddingBottom: 45 }]}>
         <Text style={[styles.text, { color: 'white' }]}>
           Henüz hesabınız yok mu
         </Text>
@@ -123,7 +141,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#ECA800',
     padding: 16,
     borderRadius: 8,
   },
@@ -151,4 +168,9 @@ const styles = StyleSheet.create({
     color: '#ACE2E1',
     textDecorationLine: 'underline',
   },
+  errorText: {
+    color: "red",
+    padding: 4,
+    paddingLeft: 20
+  }
 });
